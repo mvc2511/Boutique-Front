@@ -53,6 +53,8 @@ The following files were modified:
 
 ## Usage
 
+1.  **Actualizar Changelog**: Antes de realizar el commit, invoca el skill `changelog-manager` para registrar los cambios y actualizar la versión en `CHANGELOG.md`. Asegúrate de preparar (*stage*) el archivo `CHANGELOG.md` modificado.
+2.  **Commit**:
 
 ```bash
 commiter <message>
