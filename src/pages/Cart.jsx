@@ -7,18 +7,44 @@ const Cart = () => {
   const { cart, removeFromCart, placeOrder, user } = useShop();
   const navigate = useNavigate();
 
-  const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = subtotal > 100 ? 0 : 15;
-  const total = subtotal + shipping;
+  const exclusionCategories = ['shoes', 'calzado', 'zapatos'];
+  const categoryStats = {};
+  
+  cart.forEach(item => {
+    const cat = (item.category || 'unknown').toLowerCase();
+    if (!categoryStats[cat]) categoryStats[cat] = { quantity: 0, subtotal: 0 };
+    categoryStats[cat].quantity += item.quantity;
+    categoryStats[cat].subtotal += (item.price * item.quantity);
+  });
 
-  const handleCheckout = () => {
+  let subtotal = 0;
+  let wholesaleDiscount = 0;
+
+  cart.forEach(item => {
+    subtotal += (item.price * item.quantity);
+  });
+
+  Object.keys(categoryStats).forEach(cat => {
+    if (!exclusionCategories.includes(cat) && categoryStats[cat].quantity > 10) {
+      wholesaleDiscount += categoryStats[cat].subtotal * 0.25;
+    }
+  });
+
+  const shipping = subtotal > 100 ? 0 : 15;
+  const total = subtotal - wholesaleDiscount + shipping;
+
+  const handleCheckout = async () => {
     if (!user) {
       alert("Por favor inicia sesión para completar tu compra.");
       return;
     }
-    placeOrder();
-    alert("¡Pedido realizado con éxito! Puedes verlo en tu historial.");
-    navigate('/dashboard');
+    try {
+      await placeOrder();
+      // Si todo va bien, placeOrder redirigirá a Stripe.
+      // Ya no necesitamos navegar al dashboard aquí directamente.
+    } catch (error) {
+      alert("Hubo un problema al procesar el pago: " + error.message);
+    }
   };
 
   if (cart.length === 0) {
@@ -41,12 +67,13 @@ const Cart = () => {
           {cart.map(item => (
             <motion.div 
               layout
-              key={item.id} 
+              key={item._id || item.id} 
               className="cart-item glass"
             >
-              <img src={item.image} alt={item.name} />
+              <img src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} />
               <div className="item-info">
                 <h3>{item.name}</h3>
+                {item.selectedSize && <p style={{color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.3rem'}}>Talla: {item.selectedSize}</p>}
                 <p className="item-price">${item.price.toFixed(2)} x {item.quantity}</p>
               </div>
               <button className="remove-btn" onClick={() => removeFromCart(item.id)}>
@@ -62,6 +89,12 @@ const Cart = () => {
             <span>Subtotal</span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
+          {wholesaleDiscount > 0 && (
+            <div className="summary-row" style={{ color: 'var(--primary)' }}>
+              <span>Desc. Mayoreo (-25%)</span>
+              <span>-${wholesaleDiscount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="summary-row">
             <span>Envío</span>
             <span>{shipping === 0 ? 'GRATIS' : `$${shipping.toFixed(2)}`}</span>

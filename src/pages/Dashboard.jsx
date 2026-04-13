@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useShop } from '../context/ShopContext';
-import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { User, Package, Heart, LogOut, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Dashboard = () => {
-  const { user, logout, favorites, orders } = useShop();
+  const { user, logout, favorites, orders, products, fetchOrderHistory } = useShop();
   const [activeTab, setActiveTab] = useState('orders');
+
+  useEffect(() => {
+    if (user && activeTab === 'orders') {
+      fetchOrderHistory();
+    }
+  }, [user, activeTab, fetchOrderHistory]);
 
   if (!user) {
     return (
@@ -18,7 +23,7 @@ const Dashboard = () => {
     );
   }
 
-  const favoriteProducts = products.filter(p => favorites.includes(p.id));
+  const favoriteProducts = products.filter(p => favorites.includes(p._id || p.id));
 
   return (
     <div className="dashboard-page container fade-in">
@@ -180,28 +185,35 @@ const Dashboard = () => {
 
         .dashboard-content {
           display: grid;
-          grid-template-columns: 250px 1fr;
-          gap: 3rem;
+          grid-template-columns: 240px 1fr;
+          gap: 4rem;
+          align-items: start;
         }
         .dashboard-nav {
-          padding: 1.5rem;
-          border-radius: 20px;
+          padding: 1rem;
+          border-radius: 12px;
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
-          height: fit-content;
+          position: sticky;
+          top: 120px;
         }
         .dashboard-nav button {
           display: flex;
           align-items: center;
           gap: 1rem;
-          padding: 1rem 1.5rem;
-          border-radius: 10px;
+          padding: 0.8rem 1.2rem;
+          border-radius: 8px;
           color: var(--text-muted);
-          background: none;
+          background: transparent;
           text-align: left;
           font-weight: 700;
+          font-size: 0.9rem;
           transition: var(--transition-fast);
+        }
+        .dashboard-nav button:hover:not(.active) {
+          background: rgba(255, 255, 255, 0.05);
+          color: white;
         }
         .dashboard-nav button.active {
           background: var(--primary);

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const ProductCard = ({ product }) => {
   const { addToCart, toggleFavorite, favorites } = useShop();
-  const isFavorite = favorites.includes(product.id);
+  const isFavorite = favorites.includes(product._id || product.id);
 
   return (
     <motion.div 
@@ -13,12 +13,12 @@ const ProductCard = ({ product }) => {
       className="product-card glass"
     >
       <div className="card-image">
-        <Link to={`/product/${product.id}`}>
-          <img src={product.image} alt={product.name} />
+        <Link to={`/product/${product._id || product.id}`}>
+          <img src={product.images?.[0] || product.image || '/placeholder.png'} alt={product.name} />
         </Link>
         <button 
           className={`fav-btn ${isFavorite ? 'active' : ''}`}
-          onClick={() => toggleFavorite(product.id)}
+          onClick={() => toggleFavorite(product._id || product.id)}
         >
           <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
         </button>
@@ -29,11 +29,11 @@ const ProductCard = ({ product }) => {
           <span className="category">{product.category === 'male' ? 'Hombre' : 'Mujer'}</span>
           <span className="price">${product.price.toFixed(2)}</span>
         </div>
-        <h3><Link to={`/product/${product.id}`}>{product.name}</Link></h3>
+        <h3><Link to={`/product/${product._id || product.id}`}>{product.name}</Link></h3>
         
-        <button className="add-btn" onClick={() => addToCart(product)}>
-          Añadir al Carrito <ShoppingCart size={18} />
-        </button>
+        <Link to={`/product/${product._id || product.id}`} className="add-btn">
+          <span>Ver Opciones</span> <ShoppingCart size={18} />
+        </Link>
       </div>
 
       <style jsx>{`

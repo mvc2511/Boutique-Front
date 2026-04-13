@@ -1,18 +1,39 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { products } from '../data/products';
 import { useShop } from '../context/ShopContext';
 import { ShoppingCart, Heart, ChevronLeft, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleFavorite, favorites } = useShop();
+  const { addToCart, toggleFavorite, favorites, products } = useShop();
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
-  const product = products.find(p => p.id === parseInt(id));
-  const isFavorite = favorites.includes(product?.id);
+  const product = products.find(p => (p._id || p.id).toString() === id);
+  const isFavorite = favorites.includes(product?._id || product?.id);
 
   if (!product) return <div className="container flex-center">Producto no encontrado</div>;
+
+  const sizes = product.attributes?.size || [];
+  const isOutOfStock = product.stock <= 0;
+
+  const handleAddToCart = () => {
+    if (sizes.length > 0 && !selectedSize) {
+      alert("Por favor escoge una talla antes de añadir al carrito.");
+      return;
+    }
+    const cartProduct = { ...product, quantity }; // Añade la cantidad elegida
+    if (selectedSize) {
+      cartProduct.selectedSize = selectedSize;
+      // Añadimos la talla al ID para que sean items separados en el carrito
+      cartProduct.cartId = `${product._id || product.id}_${selectedSize}`; 
+    } else {
+      cartProduct.cartId = product._id || product.id;
+    }
+    addToCart(cartProduct);
+  };
 
   return (
     <div className="product-detail-page container fade-in">
@@ -26,7 +47,7 @@ const ProductDetail = () => {
           animate={{ opacity: 1, x: 0 }}
           className="product-image-container glass"
         >
-          <img src={product.image} alt={product.name} />
+          <img src={product.images?.[0] || product.image || '/placeholder.png'} alt={product.name} />
         </motion.div>
 
         <motion.div 
@@ -48,15 +69,54 @@ const ProductDetail = () => {
           <p className="price-tag">${product.price.toFixed(2)}</p>
           <p className="description">{product.description}</p>
           
+          {sizes.length > 0 && (
+            <div className="size-selector">
+              <p>SELECCIONA TALLA:</p>
+              <div className="sizes">
+                {sizes.map(size => (
+                  <button 
+                    key={size}
+                    className={`size-btn ${selectedSize === size ? 'active' : ''}`}
+                    onClick={() => setSelectedSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="features">
-            {product.features.map((f, i) => (
+            {product.features?.map((f, i) => (
               <span key={i} className="feature-pill glass">{f}</span>
             ))}
           </div>
 
+          <div className="quantity-selector">
+            <p>CANTIDAD:</p>
+            <div className="qty-controls">
+              <button 
+                className="qty-btn" 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))} 
+                disabled={isOutOfStock}
+              >-</button>
+              <span>{quantity}</span>
+              <button 
+                className="qty-btn" 
+                onClick={() => setQuantity(Math.min(product.stock || 99, quantity + 1))} 
+                disabled={isOutOfStock}
+              >+</button>
+            </div>
+          </div>
+
           <div className="actions">
-            <button className="add-cart-btn neon-border" onClick={() => addToCart(product)}>
-              AGREGAR AL CARRITO <ShoppingCart size={20} />
+            <button 
+              className="add-cart-btn neon-border" 
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              style={{ opacity: isOutOfStock ? 0.5 : 1, cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
+            >
+              {isOutOfStock ? "AGOTADO" : "AGREGAR AL CARRITO"} <ShoppingCart size={20} />
             </button>
             <button 
               className={`favorite-btn glass ${isFavorite ? 'active' : ''}`}
@@ -150,7 +210,65 @@ const ProductDetail = () => {
           font-size: 0.85rem;
           font-weight: 700;
         }
+
+        .size-selector { margin-bottom: 2rem; }
+        .size-selector p { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.8rem; }
+        .sizes { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+        .size-btn { 
+          background: rgba(255,255,255,0.05); 
+          border: 1px solid var(--border-color); 
+          color: var(--text-main); 
+          padding: 0.8rem 1.5rem; 
+          border-radius: 8px; 
+          font-weight: 700; 
+          transition: var(--transition-fast);
+        }
+        .size-btn:hover { background: rgba(255,255,255,0.1); }
+        .size-btn.active { 
+          background: var(--primary); 
+          color: var(--bg-color); 
+          border-color: var(--primary); 
+          box-shadow: 0 0 15px var(--primary-glow); 
+        }
         
+        .quantity-selector { margin-bottom: 2.5rem; }
+        .quantity-selector p { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.8rem; }
+        .qty-controls {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          background: rgba(255,255,255,0.05);
+          display: inline-flex;
+          padding: 0.5rem;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+        }
+        .qty-controls span {
+          font-weight: 800;
+          font-size: 1.2rem;
+          min-width: 2rem;
+          text-align: center;
+        }
+        .qty-btn {
+          background: none;
+          color: var(--text-main);
+          font-size: 1.5rem;
+          width: 35px;
+          height: 35px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 5px;
+          transition: var(--transition-fast);
+        }
+        .qty-btn:hover:not(:disabled) {
+          background: rgba(255,255,255,0.1);
+        }
+        .qty-btn:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
         .actions {
           display: flex;
           gap: 1.5rem;

@@ -1,15 +1,16 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Shield, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { products } from '../data/products';
+import { useShop } from '../context/ShopContext';
 import ProductCard from '../components/ProductCard';
 
 const Home = () => {
+  const { products, loading } = useShop();
   const featured = products.slice(0, 3);
+  const heroProduct = products[2] || products[0];
 
   return (
     <div className="home-page fade-in">
-      {/* Hero Section */}
       <section className="hero">
         <div className="container hero-content">
           <motion.div 
@@ -33,7 +34,7 @@ const Home = () => {
             className="hero-image"
           >
             <div className="hero-glow"></div>
-            <img src={products[2].image} alt="Featured Fashion" />
+            {heroProduct && <img src={heroProduct.images?.[0] || heroProduct.image || '/placeholder.png'} alt="Featured Fashion" />}
           </motion.div>
         </div>
       </section>
@@ -70,7 +71,7 @@ const Home = () => {
         <h2 className="section-title">LO MÁS <span className="neon-text">DESTACADO</span></h2>
         <div className="products-grid">
           {featured.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product._id || product.id} product={product} />
           ))}
         </div>
         <div className="flex-center mt-4">

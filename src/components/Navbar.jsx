@@ -30,7 +30,7 @@ const Navbar = ({ openAuth }) => {
             {cartCount > 0 && <span className="badge">{cartCount}</span>}
           </button>
           
-          <button className="nav-icon" onClick={() => navigate('/dashboard')}>
+          <button className="nav-icon" onClick={() => navigate('/favorites')}>
             <Heart size={20} />
           </button>
 
@@ -78,21 +78,25 @@ const Navbar = ({ openAuth }) => {
           justify-content: space-between;
           align-items: center;
           width: 100%;
+          height: 100%;
         }
         .logo {
           font-size: 1.5rem;
           font-weight: 800;
           letter-spacing: 0.1em;
+          flex: 1;
         }
         .nav-links {
           display: flex;
-          gap: 2rem;
+          gap: 3rem;
+          flex: 1;
+          justify-content: center;
         }
         .nav-links a {
-          font-weight: 600;
+          font-weight: 700;
           text-transform: uppercase;
-          font-size: 0.9rem;
-          letter-spacing: 0.05em;
+          font-size: 0.85rem;
+          letter-spacing: 0.1em;
         }
         .nav-links a:hover {
           color: var(--primary);
@@ -101,6 +105,8 @@ const Navbar = ({ openAuth }) => {
           display: flex;
           align-items: center;
           gap: 1.5rem;
+          flex: 1;
+          justify-content: flex-end;
         }
         .nav-icon {
           background: none;
@@ -131,7 +137,7 @@ const Navbar = ({ openAuth }) => {
         }
         .profile-btn {
           border: 1px solid var(--border-color);
-          padding: 0.5rem 1rem;
+          padding: 0.5rem 1.2rem;
           border-radius: 30px;
           background: rgba(255,255,255,0.05);
         }
@@ -147,9 +153,11 @@ const Navbar = ({ openAuth }) => {
           gap: 1.5rem;
           text-align: center;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
           .desktop-only { display: none; }
           .mobile-only { display: block; }
+          .logo { flex: 1; text-align: left; }
+          .nav-actions { flex: content; }
         }
       `}</style>
     </nav>
